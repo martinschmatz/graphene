@@ -3,8 +3,9 @@ export SYS
 
 export DEBUG
 
-GLIBC_SRC = glibc-2.19
-GLIBC_CHECKSUM = 18ad6db70724699d264add80b1f813630d0141cf3a3558b4e1a7c15f6beac796
+GLIBC_VERSION ?= 2.23
+GLIBC_SRC = glibc-$(GLIBC_VERSION)
+GLIBC_CHECKSUM = $(firstword $(shell grep $(GLIBC_SRC).tar.gz glibc-checksums))
 SHIM_DIR = shim
 BUILD_DIR = glibc-build
 RUNTIME_DIR = $(CURDIR)/../Runtime
@@ -50,9 +51,9 @@ $(GLIBC_TARGET): $(BUILD_DIR)/Build.success
 
 $(BUILD_DIR)/Makefile: $(GLIBC_SRC)/configure
 ifeq ($(DEBUG),1)
-	./buildglibc.py --quiet --debug
+	./buildglibc.py --src $(GLIBC_SRC) --quiet --debug
 else
-	./buildglibc.py --quiet
+	./buildglibc.py --src $(GLIBC_SRC) --quiet
 endif
 
 define LN_SF_TO_RUNTIME_DIR_template =
@@ -70,13 +71,21 @@ ifeq ($(shell git ls-files $(GLIBC_SRC)/configure),)
 GLIBC_PATCHES = \
 	$(GLIBC_SRC).patch \
 	glibc-syscalldb-api.patch \
+	glibc-liblibos.patch
+
+GLIBC_PATCHES_2.19 = \
 	glibc-fix-warning.patch \
 	glibc-no-pie.patch \
-	glibc-liblibos.patch
+	glibc-liblibos-2.19.patch
+
+GLIBC_PATCHES_2.23 = \
+	glibc-liblibos-2.23+.patch
 
 ifneq ($(filter %.gold,$(shell readlink -f /usr/bin/ld)),)
 GLIBC_PATCHES += glibc-ld.gold.patch
 endif
+
+GLIBC_PATCHES += $(GLIBC_PATCHES_$(GLIBC_VERSION))
 
 $(GLIBC_SRC)/configure: $(GLIBC_PATCHES) $(GLIBC_SRC).tar.gz
 	[ "`sha256sum $(GLIBC_SRC).tar.gz`" = "$(GLIBC_CHECKSUM)  $(GLIBC_SRC).tar.gz" ] || \
