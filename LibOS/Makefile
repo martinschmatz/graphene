@@ -81,6 +81,9 @@ GLIBC_PATCHES_2.19 = \
 GLIBC_PATCHES_2.23 = \
 	glibc-liblibos-2.23+.patch
 
+GLIBC_PATCHES_2.27 = \
+	glibc-liblibos-2.23+.patch
+
 # USE_clone_FOR_fork = true
 ifneq ($(USE_clone_FOR_fork),)
 GLIBC_PATCHES += glibc-arch-fork.patch
