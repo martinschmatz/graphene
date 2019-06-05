@@ -425,7 +425,7 @@ static inline void enable_locking (void)
         lock_enabled = true;
 }
 
-static inline PAL_HANDLE thread_create (void * func, void * arg, int option)
+static inline PAL_HANDLE thread_create (void * func, void * arg)
 {
     assert(lock_enabled);
     return DkThreadCreate(func, arg);
@@ -457,7 +457,7 @@ static inline void __enable_preempt (shim_tcb_t * tcb)
     //debug("enable preempt: %d\n", tcb->context.preempt & ~SIGNAL_DELAYED);
 }
 
-void __handle_signal (shim_tcb_t * tcb, int sig, ucontext_t * uc);
+void __handle_signal (shim_tcb_t * tcb, int sig);
 
 static inline void enable_preempt (shim_tcb_t * tcb)
 {
@@ -468,7 +468,7 @@ static inline void enable_preempt (shim_tcb_t * tcb)
         return;
 
     if ((tcb->context.preempt & ~SIGNAL_DELAYED) == 1)
-        __handle_signal(tcb, 0, NULL);
+        __handle_signal(tcb, 0);
 
     __enable_preempt(tcb);
 }

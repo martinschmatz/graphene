@@ -19,12 +19,16 @@
 
 static int proc_info_mode (const char * name, mode_t * mode)
 {
+    // The path is implicitly set by calling this function
+    __UNUSED(name);
     *mode = 0444;
     return 0;
 }
 
 static int proc_info_stat (const char * name, struct stat * buf)
 {
+    // The path is implicitly set by calling this function
+    __UNUSED(name);
     memset(buf, 0, sizeof(struct stat));
     buf->st_dev = buf->st_ino = 1;
     buf->st_mode = 0444|S_IFREG;
@@ -37,6 +41,8 @@ static int proc_info_stat (const char * name, struct stat * buf)
 static int proc_meminfo_open (struct shim_handle * hdl, const char * name,
                               int flags)
 {
+    // This function only serves one file
+    __UNUSED(name);
     if (flags & (O_WRONLY|O_RDWR))
         return -EACCES;
 
@@ -86,6 +92,9 @@ retry:
 static int proc_cpuinfo_open (struct shim_handle * hdl, const char * name,
                               int flags)
 {
+    // This function only serves one file
+    __UNUSED(name);
+
     if (flags & (O_WRONLY|O_RDWR))
         return -EACCES;
 

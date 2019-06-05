@@ -844,6 +844,7 @@ END_CP_FUNC(handle)
 BEGIN_RS_FUNC(handle)
 {
     struct shim_handle * hdl = (void *) (base + GET_CP_FUNC_ENTRY());
+    __UNUSED(offset);
 
     CP_REBASE(hdl->fs);
     CP_REBASE(hdl->dentry);
@@ -941,6 +942,7 @@ END_CP_FUNC(handle_map)
 BEGIN_RS_FUNC(handle_map)
 {
     struct shim_handle_map * handle_map = (void *) (base + GET_CP_FUNC_ENTRY());
+    __UNUSED(offset);
 
     CP_REBASE(handle_map->map);
     assert(handle_map->map);

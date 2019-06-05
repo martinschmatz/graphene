@@ -151,11 +151,6 @@ int permission (struct shim_dentry * dent, int mask, bool force) {
  * This function checks the dcache first, and then, on a miss, falls back
  * to the low-level file system.
  *
- * The force flag causes the libOS to query the underlying file system for the
- * existence of the dentry, even on a dcache hit, whereas without force, a
- * negative dentry is treated as definitive.  A hit with a valid dentry is
- * _always_ treated as definitive, even if force is set.
- *
  * XXX: The original code returned whether the process can exec the task?
  *       Not clear this is needed; try not doing this.
  *
@@ -165,7 +160,7 @@ int permission (struct shim_dentry * dent, int mask, bool force) {
  * The caller should hold the dcache_lock.
  */
 int lookup_dentry (struct shim_dentry * parent, const char * name, int namelen,
-                   bool force, struct shim_dentry ** new,
+                   struct shim_dentry ** new,
                    struct shim_mount * fs)
 {
     struct shim_dentry * dent = NULL;
@@ -173,7 +168,7 @@ int lookup_dentry (struct shim_dentry * parent, const char * name, int namelen,
     int err = 0;
 
     /* Look up the name in the dcache first, one atom at a time. */
-    dent = __lookup_dcache(parent, name, namelen, NULL, 0, NULL);
+    dent = __lookup_dcache(parent, name, namelen, NULL);
 
     if (!dent) {
         dent = get_new_dentry(fs, parent, name, namelen, NULL);
@@ -186,8 +181,6 @@ int lookup_dentry (struct shim_dentry * parent, const char * name, int namelen,
     } else {
         if (!(dent->state & DENTRY_VALID))
             do_fs_lookup = 1;
-        else if (force && (dent->state & DENTRY_NEGATIVE))
-            do_fs_lookup = 1;
     }
 
     if (do_fs_lookup) {
@@ -196,7 +189,7 @@ int lookup_dentry (struct shim_dentry * parent, const char * name, int namelen,
         assert (dent->fs);
         assert (dent->fs->d_ops);
         assert (dent->fs->d_ops->lookup);
-        err = dent->fs->d_ops->lookup(dent, force);
+        err = dent->fs->d_ops->lookup(dent);
 
         /* XXX: On an error, it seems like we should probably destroy
          * the dentry, rather than keep some malformed dentry lying around.
@@ -345,8 +338,7 @@ int __path_lookupat (struct shim_dentry * start, const char * path, int flags,
 
         } else {
             // Once we have an atom, look it up and update start
-            // XXX: Assume we don't need the force flag here?
-            err = lookup_dentry(start, path, my_pathlen, 0, &my_dent, fs);
+            err = lookup_dentry(start, path, my_pathlen, &my_dent, fs);
             // my_dent's refcount is incremented after this, consistent with cases above
 
             // Allow a negative dentry to move forward
@@ -727,7 +719,7 @@ int list_directory_dentry (struct shim_dentry *dent) {
     struct shim_dirent * d = dirent;
     for ( ; d ; d = d->next) {
         struct shim_dentry * child;
-        if ((ret = lookup_dentry(dent, d->name, strlen(d->name), false,
+        if ((ret = lookup_dentry(dent, d->name, strlen(d->name),
                                  &child, fs)) < 0)
             goto done_read;
 
@@ -840,5 +832,3 @@ int path_startat (int dfd, struct shim_dentry ** dir)
         return 0;
     }
 }
-
-

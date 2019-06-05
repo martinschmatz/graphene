@@ -613,12 +613,16 @@ err:
 
 static int proc_thread_maps_mode (const char * name, mode_t * mode)
 {
+    // Only used by one file
+    __UNUSED(name);
     *mode = 0400;
     return 0;
 }
 
 static int proc_thread_maps_stat (const char * name, struct stat * buf)
 {
+    // Only used by one file
+    __UNUSED(name);
     memset(buf, 0, sizeof(struct stat));
 
     buf->st_dev = buf->st_ino = 1;
@@ -639,6 +643,8 @@ static const struct proc_fs_ops fs_thread_maps = {
 static int proc_thread_dir_open (struct shim_handle * hdl,
                                  const char * name, int flags)
 {
+    __UNUSED(hdl);
+    __UNUSED(name);
 
     if (flags & (O_WRONLY|O_RDWR))
         return -EISDIR;
@@ -711,6 +717,8 @@ struct walk_thread_arg {
 
 static int walk_cb (struct shim_thread * thread, void * arg, bool * unlocked)
 {
+    // unlocked needed for kill
+    __UNUSED(unlocked);
     struct walk_thread_arg * args = (struct walk_thread_arg *) arg;
     IDTYPE pid = thread->tid;
     int p = pid, l = 0;

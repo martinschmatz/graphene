@@ -490,7 +490,7 @@ int check_last_thread (struct shim_thread * self)
 }
 
 int walk_thread_list (int (*callback) (struct shim_thread *, void *, bool *),
-                      void * arg, bool may_write)
+                      void * arg)
 {
     struct shim_thread * tmp, * n;
     bool srched = false;
@@ -531,7 +531,7 @@ out:
 
 int walk_simple_thread_list (int (*callback) (struct shim_simple_thread *,
                                               void *, bool *),
-                             void * arg, bool may_write)
+                             void * arg)
 {
     struct shim_simple_thread * tmp, * n;
     bool srched = false;
@@ -657,6 +657,7 @@ END_CP_FUNC(thread)
 BEGIN_RS_FUNC(thread)
 {
     struct shim_thread * thread = (void *) (base + GET_CP_FUNC_ENTRY());
+    __UNUSED(offset);
 
     CP_REBASE(thread->children);
     CP_REBASE(thread->siblings);
@@ -696,6 +697,7 @@ END_RS_FUNC(thread)
 
 BEGIN_CP_FUNC(running_thread)
 {
+    __UNUSED(objp);
     assert(size == sizeof(struct shim_thread));
 
     struct shim_thread * thread = (struct shim_thread *) obj;
@@ -735,6 +737,7 @@ int resume_wrapper (void * param)
 
 BEGIN_RS_FUNC(running_thread)
 {
+    __UNUSED(offset);
     struct shim_thread * thread = (void *) (base + GET_CP_FUNC_ENTRY());
     struct shim_thread * cur_thread = get_cur_thread();
     thread->in_vm = true;
@@ -793,6 +796,9 @@ END_RS_FUNC(running_thread)
 
 BEGIN_CP_FUNC(all_running_threads)
 {
+    __UNUSED(obj);
+    __UNUSED(size);
+    __UNUSED(objp);
     struct shim_thread * thread;
     lock(&thread_list_lock);
 
