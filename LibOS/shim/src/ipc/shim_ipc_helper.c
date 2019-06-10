@@ -109,6 +109,9 @@ static int init_ipc_port (struct shim_ipc_info * info, PAL_HANDLE hdl, int type)
 static void ipc_broadcast_exit (struct shim_ipc_port * port, IDTYPE vmid,
                                 unsigned exitcode)
 {
+    // Arguments for compatibility
+    __UNUSED(vmid);
+    __UNUSED(exitcode);
     if (port == broadcast_port) {
         MASTER_LOCK();
         broadcast_port = NULL;

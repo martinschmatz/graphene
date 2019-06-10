@@ -36,14 +36,16 @@
 
 #include <errno.h>
 
-static int ipc_thread_exit (IDTYPE vmid, IDTYPE ppid, IDTYPE tid,
-                            unsigned int exitcode, unsigned int term_signal, unsigned long exit_time)
+static int ipc_thread_exit (IDTYPE vmid, IDTYPE tid, unsigned int exitcode,
+                            unsigned int term_signal, unsigned long exit_time)
 {
     assert(vmid != cur_process.vmid);
 
 #ifdef PROFILE
     if (!exit_time)
         exit_time = GET_PROFILE_INTERVAL();
+#else
+    __UNUSED(exit_time);
 #endif
 
     struct shim_thread * thread = __lookup_thread(tid);
@@ -81,27 +83,6 @@ static int ipc_thread_exit (IDTYPE vmid, IDTYPE ppid, IDTYPE tid,
     return 0;
 }
 
-void ipc_parent_exit (struct shim_ipc_port * port, IDTYPE vmid,
-                      unsigned int exitcode)
-{
-    debug("ipc port %p of process %u closed suggests parent exiting\n",
-          port, vmid);
-
-    struct shim_ipc_info * parent = NULL;
-
-    lock(&cur_process.lock);
-
-    if (parent && vmid == cur_process.parent->vmid) {
-        parent = cur_process.parent;
-        cur_process.parent = NULL;
-    }
-
-    unlock(&cur_process.lock);
-
-    if (parent)
-        put_ipc_info(parent);
-}
-
 struct thread_info {
     IDTYPE vmid;
     unsigned int exitcode;
@@ -111,6 +92,7 @@ struct thread_info {
 static int child_sthread_exit (struct shim_simple_thread * thread, void * arg,
                                bool * unlocked)
 {
+    __UNUSED(unlocked); // Used by other calbacks
     struct thread_info * info = (struct thread_info *) arg;
     if (thread->vmid == info->vmid) {
         if (thread->is_alive) {
@@ -127,6 +109,7 @@ static int child_sthread_exit (struct shim_simple_thread * thread, void * arg,
 static int child_thread_exit (struct shim_thread * thread, void * arg,
                               bool * unlocked)
 {
+    __UNUSED(unlocked); // Used by other calbacks
     struct thread_info * info = (struct thread_info *) arg;
     if (thread->vmid == info->vmid) {
         if (thread->is_alive) {
@@ -146,10 +129,10 @@ int remove_child_thread (IDTYPE vmid, unsigned int exitcode, unsigned int term_s
 
     assert(vmid != cur_process.vmid);
 
-    if ((ret = walk_thread_list(&child_thread_exit, &info, false)) > 0)
+    if ((ret = walk_thread_list(&child_thread_exit, &info)) > 0)
         nkilled += ret;
 
-    if ((ret = walk_simple_thread_list(&child_sthread_exit, &info, false)) > 0)
+    if ((ret = walk_simple_thread_list(&child_sthread_exit, &info)) > 0)
         nkilled += ret;
 
     if (!nkilled)
@@ -218,6 +201,9 @@ int ipc_cld_exit_send (IDTYPE ppid, IDTYPE tid, unsigned int exitcode, unsigned 
 
 int ipc_cld_exit_callback (IPC_CALLBACK_ARGS)
 {
+    // XXX: Should we close/free port?
+    __UNUSED(port);
+
     struct shim_ipc_cld_exit * msgin =
                 (struct shim_ipc_cld_exit *) &msg->msg;
 
@@ -232,7 +218,9 @@ int ipc_cld_exit_callback (IPC_CALLBACK_ARGS)
     debug("ipc callback from %u: IPC_CLD_EXIT(%u, %u, %d)\n",
           msg->src, msgin->ppid, msgin->tid, msgin->exitcode);
 
-    int ret = ipc_thread_exit(msg->src, msgin->ppid, msgin->tid,
+    // XXX: Assert that we are the msgin->ppid?
+
+    int ret = ipc_thread_exit(msg->src, msgin->tid,
                               msgin->exitcode, msgin->term_signal,
                               time);
     SAVE_PROFILE_INTERVAL(ipc_cld_exit_callback);
