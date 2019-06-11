@@ -198,6 +198,7 @@ END_CP_FUNC_NO_RS(memory)
 
 BEGIN_CP_FUNC(palhdl)
 {
+    __UNUSED(size);
     ptr_t off = ADD_CP_OFFSET(sizeof(struct shim_palhdl_entry));
     struct shim_palhdl_entry * entry = (void *) (base + off);
 
@@ -217,6 +218,7 @@ END_CP_FUNC(palhdl)
 
 BEGIN_RS_FUNC(palhdl)
 {
+    __UNUSED(offset);
     struct shim_palhdl_entry * ent = (void *) (base + GET_CP_FUNC_ENTRY());
 
     if (ent->phandle && !ent->phandle && ent->uri) {
