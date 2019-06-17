@@ -50,33 +50,33 @@
 #include <linux/in6.h>
 #include <linux/un.h>
 
-static void parse_open_flags    (const char *, va_list *);
-static void parse_open_mode     (const char *, va_list *);
-static void parse_access_mode   (const char *, va_list *);
-static void parse_clone_flags   (const char *, va_list *);
-static void parse_mmap_prot     (const char *, va_list *);
-static void parse_mmap_flags    (const char *, va_list *);
-static void parse_exec_args     (const char *, va_list *);
-static void parse_exec_envp     (const char *, va_list *);
-static void parse_pipe_fds      (const char *, va_list *);
-static void parse_signum        (const char *, va_list *);
-static void parse_sigmask       (const char *, va_list *);
-static void parse_sigprocmask_how (const char *, va_list *);
-static void parse_timespec      (const char *, va_list *);
-static void parse_sockaddr      (const char *, va_list *);
-static void parse_domain        (const char *, va_list *);
-static void parse_socktype      (const char *, va_list *);
-static void parse_futexop       (const char *, va_list *);
-static void parse_ioctlop       (const char *, va_list *);
-static void parse_fcntlop       (const char *, va_list *);
-static void parse_seek          (const char *, va_list *);
-static void parse_at_fdcwd      (const char *, va_list *);
-static void parse_wait_option   (const char *, va_list *);
+static void parse_open_flags    (va_list *);
+static void parse_open_mode     (va_list *);
+static void parse_access_mode   (va_list *);
+static void parse_clone_flags   (va_list *);
+static void parse_mmap_prot     (va_list *);
+static void parse_mmap_flags    (va_list *);
+static void parse_exec_args     (va_list *);
+static void parse_exec_envp     (va_list *);
+static void parse_pipe_fds      (va_list *);
+static void parse_signum        (va_list *);
+static void parse_sigmask       (va_list *);
+static void parse_sigprocmask_how (va_list *);
+static void parse_timespec      (va_list *);
+static void parse_sockaddr      (va_list *);
+static void parse_domain        (va_list *);
+static void parse_socktype      (va_list *);
+static void parse_futexop       (va_list *);
+static void parse_ioctlop       (va_list *);
+static void parse_fcntlop       (va_list *);
+static void parse_seek          (va_list *);
+static void parse_at_fdcwd      (va_list *);
+static void parse_wait_option   (va_list *);
 
 struct parser_table {
     int slow;
     int stop;
-    void (*parser[6]) (const char *, va_list *);
+    void (*parser[6]) (va_list *);
 } syscall_parser_table[LIBOS_SYSCALL_BOUND] = {
     { .slow = 1, .parser = { NULL } }, /* read */
     { .slow = 1, .parser = { NULL } }, /* write */
@@ -510,8 +510,7 @@ void parse_syscall_before (int sysno, const char * name, int nr, ...)
             PUTCH(',');
 
         if (parser->parser[i]) {
-            const char * type = va_arg(ap, const char *);
-            (*parser->parser[i])(type, &ap);
+            (*parser->parser[i])(&ap);
         } else
             parse_syscall_args(&ap);
     }
@@ -558,8 +557,7 @@ void parse_syscall_after (int sysno, const char * name, int nr, ...)
                 PUTCH(',');
 
             if (parser->parser[i]) {
-                const char * type = va_arg(ap, const char *);
-                (*parser->parser[i])(type, &ap);
+                (*parser->parser[i])(&ap);
             } else
                 parse_syscall_args(&ap);
         }
@@ -579,7 +577,7 @@ void parse_syscall_after (int sysno, const char * name, int nr, ...)
     va_end (ap);
 }
 
-static void parse_open_flags (const char * type, va_list * ap)
+static void parse_open_flags (va_list * ap)
 {
     int flags = va_arg(*ap, int);
 
@@ -613,12 +611,12 @@ static void parse_open_flags (const char * type, va_list * ap)
         PRINTF("|%o", flags);
 }
 
-static void parse_open_mode (const char * type, va_list * ap)
+static void parse_open_mode (va_list * ap)
 {
     VPRINTF("%04o", ap);
 }
 
-static void parse_access_mode (const char * type, va_list * ap)
+static void parse_access_mode (va_list * ap)
 {
     int mode = va_arg(*ap, int);
 
@@ -634,7 +632,7 @@ static void parse_access_mode (const char * type, va_list * ap)
     }
 }
 
-static void parse_clone_flags (const char * type, va_list * ap)
+static void parse_clone_flags (va_list * ap)
 {
     int flags = va_arg(*ap, int);
 
@@ -665,7 +663,7 @@ static void parse_clone_flags (const char * type, va_list * ap)
         PRINTF("|0x%x", flags);
 }
 
-static void parse_mmap_prot (const char * type, va_list * ap)
+static void parse_mmap_prot (va_list * ap)
 {
     int prot = va_arg(*ap, int);
     int nflags = 0;
@@ -695,7 +693,7 @@ static void parse_mmap_prot (const char * type, va_list * ap)
     }
 }
 
-static void parse_mmap_flags (const char * type, va_list * ap)
+static void parse_mmap_flags (va_list * ap)
 {
     int flags = va_arg(*ap, int);
 
@@ -735,7 +733,7 @@ static void parse_mmap_flags (const char * type, va_list * ap)
         PRINTF("|0x%x", flags);
 }
 
-static void parse_exec_args (const char * type, va_list * ap)
+static void parse_exec_args (va_list * ap)
 {
     const char ** args = va_arg(*ap, const char **);
 
@@ -759,7 +757,7 @@ static void parse_exec_args (const char * type, va_list * ap)
     PUTS("]");
 }
 
-static void parse_exec_envp (const char * type, va_list * ap)
+static void parse_exec_envp (va_list * ap)
 {
     const char ** envp = va_arg(*ap, const char **);
 
@@ -792,7 +790,7 @@ static void parse_exec_envp (const char * type, va_list * ap)
     PUTS("]");
 }
 
-static void parse_pipe_fds (const char * type, va_list * ap)
+static void parse_pipe_fds (va_list * ap)
 {
     int * fds = va_arg(*ap, int *);
 
@@ -838,7 +836,7 @@ const char *const siglist[NUM_KNOWN_SIGS + 1] =
         S(SIGRTMIN),
     };
 
-static void parse_signum (const char * type, va_list * ap)
+static void parse_signum (va_list * ap)
 {
     int signum = va_arg(*ap, int);
 
@@ -848,7 +846,7 @@ static void parse_signum (const char * type, va_list * ap)
         PRINTF("[SIG %d]", signum);
 }
 
-static void parse_sigmask (const char * type, va_list * ap)
+static void parse_sigmask (va_list * ap)
 {
     __sigset_t * sigset = va_arg(*ap, __sigset_t *);
 
@@ -873,7 +871,7 @@ static void parse_sigmask (const char * type, va_list * ap)
     PUTS("]");
 }
 
-static void parse_sigprocmask_how (const char * type, va_list * ap)
+static void parse_sigprocmask_how (va_list * ap)
 {
     int how = va_arg(*ap, int);
 
@@ -893,7 +891,7 @@ static void parse_sigprocmask_how (const char * type, va_list * ap)
     }
 }
 
-static void parse_timespec (const char * type, va_list * ap)
+static void parse_timespec (va_list * ap)
 {
     const struct timespec * tv = va_arg(*ap, const struct timespec *);
 
@@ -910,7 +908,7 @@ static void parse_timespec (const char * type, va_list * ap)
     PRINTF("[%ld,%ld]", tv->tv_sec, tv->tv_nsec);
 }
 
-static void parse_sockaddr (const char * type, va_list *ap)
+static void parse_sockaddr (va_list *ap)
 {
     const struct sockaddr *addr = va_arg(*ap, const struct sockaddr *);
 
@@ -958,7 +956,7 @@ static void parse_sockaddr (const char * type, va_list *ap)
     }
 }
 
-static void parse_domain (const char * type, va_list * ap)
+static void parse_domain (va_list * ap)
 {
     int domain = va_arg(*ap, int);
 
@@ -1013,7 +1011,7 @@ static void parse_domain (const char * type, va_list * ap)
     }
 }
 
-static void parse_socktype (const char * type, va_list * ap)
+static void parse_socktype (va_list * ap)
 {
     int socktype = va_arg(*ap, int);
 
@@ -1058,7 +1056,7 @@ static void parse_socktype (const char * type, va_list * ap)
     }
 }
 
-static void parse_futexop (const char * type, va_list * ap)
+static void parse_futexop (va_list * ap)
 {
     int op = va_arg(*ap, int);
 
@@ -1109,7 +1107,7 @@ static void parse_futexop (const char * type, va_list * ap)
     }
 }
 
-static void parse_fcntlop (const char * type, va_list * ap)
+static void parse_fcntlop (va_list * ap)
 {
     int op = va_arg(*ap, int);
 
@@ -1174,7 +1172,7 @@ static void parse_fcntlop (const char * type, va_list * ap)
     }
 }
 
-static void parse_ioctlop (const char * type, va_list * ap)
+static void parse_ioctlop (va_list * ap)
 {
     int op = va_arg(*ap, int);
 
@@ -1235,7 +1233,7 @@ static void parse_ioctlop (const char * type, va_list * ap)
     PRINTF("OP 0x%04x", op);
 }
 
-static void parse_seek (const char * type, va_list * ap)
+static void parse_seek (va_list * ap)
 {
     int seek = va_arg(*ap, int);
 
@@ -1255,7 +1253,7 @@ static void parse_seek (const char * type, va_list * ap)
     }
 }
 
-static void parse_at_fdcwd (const char * type, va_list * ap)
+static void parse_at_fdcwd (va_list * ap)
 {
     int fd = va_arg(*ap, int);
 
@@ -1269,7 +1267,7 @@ static void parse_at_fdcwd (const char * type, va_list * ap)
     }
 }
 
-static void parse_wait_option (const char * type, va_list * ap)
+static void parse_wait_option (va_list * ap)
 {
     int option = va_arg(*ap, int);
 

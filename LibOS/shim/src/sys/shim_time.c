@@ -77,6 +77,7 @@ int shim_do_clock_gettime (clockid_t which_clock,
                            struct timespec * tp)
 {
     /* all clock are the same */
+    __UNUSED(which_clock);
 
     if (!tp)
         return -EINVAL;
@@ -98,6 +99,7 @@ int shim_do_clock_getres (clockid_t which_clock,
                           struct timespec * tp)
 {
     /* all clock are the same */
+    __UNUSED(which_clock);
 
     if (!tp)
         return -EINVAL;

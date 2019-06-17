@@ -757,8 +757,8 @@ done:
 }
 
 int walk_handle_map (int (*callback) (struct shim_fd_handle *,
-                                      struct shim_handle_map *, void *),
-                     struct shim_handle_map * map, void * arg)
+                                      struct shim_handle_map *),
+                     struct shim_handle_map * map)
 {
     int ret = 0;
     lock(&map->lock);
@@ -770,7 +770,7 @@ int walk_handle_map (int (*callback) (struct shim_fd_handle *,
         if (!HANDLE_ALLOCATED(map->map[i]))
             continue;
 
-        if ((ret = (*callback) (map->map[i], map, arg)) < 0)
+        if ((ret = (*callback) (map->map[i], map)) < 0)
             break;
     }
 

@@ -54,6 +54,8 @@ const unsigned int glibc_version = GLIBC_VERSION;
 
 static void handle_failure (PAL_PTR event, PAL_NUM arg, PAL_CONTEXT * context)
 {
+    __UNUSED(event);
+    __UNUSED(context);
     shim_get_tls()->pal_errno = (arg <= PAL_ERROR_BOUND) ? arg : 0;
 }
 
@@ -998,6 +1000,9 @@ static int open_pal_handle (const char * uri, void * obj)
 static int output_path (char * path, size_t size, const void * id,
                         struct shim_qstr * qstr)
 {
+    // API compatibility
+    __UNUSED(size);
+    __UNUSED(id);
     int len = strlen(path);
     if (qstr)
         qstrsetstr(qstr, path, len);
